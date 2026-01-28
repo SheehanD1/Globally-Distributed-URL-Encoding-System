@@ -15,7 +15,7 @@ public class RedirectController {
 
     private final UrlMappingService urlMappingService;
 
-    @GetMapping("/{shortUrl}")
+    @GetMapping("/{shortUrl:[a-zA-Z0-9]{8}}")
     public ResponseEntity<Void> redirect(@PathVariable String shortUrl) {
         UrlMapping mapping = urlMappingService.getOriginalUrl(shortUrl);
         if (mapping != null) {
