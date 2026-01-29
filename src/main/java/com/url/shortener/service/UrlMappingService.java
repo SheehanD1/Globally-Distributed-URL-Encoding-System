@@ -58,4 +58,8 @@ public class UrlMappingService {
     public List<UrlMapping> getUrlsByUser(User user) {
         return urlMappingRepository.findByUser(user);
     }
+
+    public UrlMapping findByShortUrl(String shortUrl) {
+         return urlMappingRepository.findByShortUrl(shortUrl);
+    }
 }

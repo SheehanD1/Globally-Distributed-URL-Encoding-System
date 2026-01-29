@@ -40,9 +40,7 @@ public class UrlMappingController {
     @GetMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<UrlMapping> getUrlAnalytics(@PathVariable String shortUrl) {
-        // Just reusing getOriginalUrl for now to get mapping details, but in reality we might want separate analytics method
-        // For MVP, knowing click count from UrlMapping is enough
-        UrlMapping mapping = urlMappingService.getOriginalUrl(shortUrl);
+        UrlMapping mapping = urlMappingService.findByShortUrl(shortUrl);
         return ResponseEntity.ok(mapping);
     }
 }
