@@ -22,6 +22,11 @@ public class UrlMappingService {
 
     public UrlMapping shortenUrl(String originalUrl, User user) {
         String shortUrl = generateShortUrl();
+        // Check for collision
+        while (urlMappingRepository.findByShortUrl(shortUrl) != null) {
+            shortUrl = generateShortUrl();
+        }
+        
         UrlMapping mapping = new UrlMapping();
         mapping.setOriginalUrl(originalUrl);
         mapping.setShortUrl(shortUrl);

@@ -17,6 +17,7 @@ public class User {
 
     private String email;
     private String username;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
     private String role = "ROLE_USER";
 }
