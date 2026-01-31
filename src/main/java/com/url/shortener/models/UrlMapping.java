@@ -22,5 +22,6 @@ public class UrlMapping {
     private User user;
 
     @OneToMany(mappedBy = "urlMapping")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<ClickEvent> clickEvents;
 }
