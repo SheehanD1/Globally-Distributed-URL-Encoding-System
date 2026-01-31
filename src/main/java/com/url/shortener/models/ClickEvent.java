@@ -15,5 +15,6 @@ public class ClickEvent {
 
     @ManyToOne
     @JoinColumn(name = "url_mapping_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private UrlMapping urlMapping;
 }
