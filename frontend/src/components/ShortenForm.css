@@ -1,0 +1,102 @@
+.shorten-form-container {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+.shorten-form-container h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 20px;
+}
+
+.shorten-form {
+    display: flex;
+    gap: 12px;
+}
+
+.shorten-form input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 2px solid #e1e1e1;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.shorten-form input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.shorten-form button {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+}
+
+.shorten-form button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.shorten-form button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.shorten-error {
+    color: #c33;
+    margin-top: 12px;
+}
+
+.shorten-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: #f0f4ff;
+    border-radius: 10px;
+    border: 1px solid #d0d8f0;
+}
+
+.short-url {
+    flex: 1;
+    color: #667eea;
+    font-weight: 600;
+    font-size: 15px;
+    word-break: break-all;
+}
+
+.copy-btn {
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.copy-btn:hover {
+    background: #5567d5;
+}
+
+@media (max-width: 600px) {
+    .shorten-form {
+        flex-direction: column;
+    }
+}
