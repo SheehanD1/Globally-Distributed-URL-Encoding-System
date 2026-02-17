@@ -1,0 +1,89 @@
+.dashboard-container {
+    min-height: 100vh;
+    background: #f5f7fb;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-header h1 {
+    font-size: 22px;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.welcome-text {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.logout-btn {
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.dashboard-main {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.urls-section {
+    margin-top: 10px;
+}
+
+.urls-section h2 {
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.urls-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.loading-text,
+.error-text,
+.empty-text {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-size: 16px;
+}
+
+.error-text {
+    color: #c33;
+}
+
+.loading-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-size: 18px;
+    color: #667eea;
+}
