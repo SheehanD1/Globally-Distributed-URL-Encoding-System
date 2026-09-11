@@ -1,126 +1,206 @@
-# URL Shortener - Spring Boot
+# URL Shortener — Production Backend Project
 
-A Spring Boot application for creating and managing shortened URLs with click tracking and user authentication capabilities.
+A production-style URL shortening service built with Spring Boot, React, PostgreSQL, and Redis. Features JWT authentication, async click analytics, Redis caching, rate limiting, and Docker containerization.
 
-## Project Overview
+## Architecture
 
-This is a globally-distributed URL shortening system built with Spring Boot that allows users to:
-- Create shortened URLs from long URLs
-- Track click events on shortened URLs
-- Manage user accounts and authentication
-- Monitor URL performance through click analytics
+```mermaid
+graph LR
+    Client["Client (React SPA)"] --> API["Spring Boot API"]
+    API --> Redis["Redis Cache"]
+    API --> DB["PostgreSQL"]
+    API --> Async["Async Executor"]
+    Async --> DB
+
+    subgraph Redirect Flow
+        direction TB
+        R1["GET /{shortCode}"] --> R2["Check Redis Cache"]
+        R2 -->|Hit| R3["Return 302"]
+        R2 -->|Miss| R4["Query PostgreSQL"]
+        R4 --> R5["Populate Cache"]
+        R5 --> R3
+        R3 --> R6["Fire Async Click Event"]
+        R6 --> R7["Batch Write to DB"]
+    end
+```
+
+**Key design decisions:**
+- **Cache-aside pattern** on the redirect hot path — Redis sits in front of PostgreSQL to minimize DB reads on the most latency-sensitive endpoint.
+- **Async analytics** — click events are published to an async executor and batch-written to the database, keeping redirect response times under a few milliseconds.
+- **Stateless API** — JWT-based authentication with no server-side sessions, enabling horizontal scaling.
 
 ## Tech Stack
 
-- **Framework**: Spring Boot 3.4.0
-- **Language**: Java 23
-- **Build Tool**: Maven
-- **ORM**: Spring Data JPA
-- **Database**: JPA-compatible database (configurable)
-- **Utilities**: Lombok for reducing boilerplate code
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Spring Boot 3.4, Java 23 |
+| **Frontend** | React 19, Vite 7 |
+| **Database** | PostgreSQL 16 |
+| **Cache** | Redis 7 |
+| **Auth** | Spring Security + JWT (jjwt 0.12) |
+| **ORM** | Spring Data JPA / Hibernate |
+| **Build** | Maven, Docker, GitHub Actions |
+| **Testing** | JUnit 5, Spring Boot Test, H2 (test) |
+| **Observability** | Spring Boot Actuator, Micrometer |
 
 ## Project Structure
 
 ```
-src/main/java/com/url/shortener/
-├── models/
-│   ├── User.java              # User entity with authentication role
-│   ├── UrlMapping.java        # Shortened URL mapping with click tracking
-│   └── ClickEvent.java        # Click event tracking for analytics
-└── UrlShortenerSbApplication.java  # Main Spring Boot application
-
-src/main/resources/
-├── application.properties      # Application configuration
-├── static/                     # Static web resources
-└── templates/                  # Thymeleaf templates (if applicable)
+├── src/main/java/com/url/shortener/
+│   ├── config/             # Redis, async, logging configuration
+│   ├── controller/         # REST controllers (auth, URLs, redirects, analytics)
+│   ├── dtos/               # Request/response DTOs
+│   ├── exception/          # Custom exceptions and global handler
+│   ├── models/             # JPA entities (User, UrlMapping, ClickEvent)
+│   ├── repository/         # Spring Data JPA repositories
+│   ├── security/           # Spring Security config, JWT filter, rate limiting
+│   └── service/            # Business logic (URL mapping, caching, analytics)
+├── src/test/               # Unit and integration tests
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── context/        # React auth context
+│   │   ├── pages/          # Dashboard, analytics, login, register
+│   │   └── services/       # Axios API client
+│   └── Dockerfile
+├── docker-compose.yml      # Full stack: API + frontend + PostgreSQL + Redis
+├── Dockerfile              # Multi-stage Spring Boot build
+└── load-test/              # k6 performance benchmarks
 ```
-
-## Key Features
-
-### User Management
-- User registration and authentication
-- Role-based access control (default: ROLE_USER)
-- Email-based user identification
-
-### URL Shortening
-- Convert long URLs to short codes
-- Track original URL and short URL mapping
-- Monitor click count for each shortened URL
-- Track creation date for each URL
-
-### Analytics
-- Click event tracking with timestamps
-- Click count aggregation per shortened URL
-- User-specific URL management
 
 ## Getting Started
 
 ### Prerequisites
 
-- Java 23 or higher
-- Maven 3.6.0 or higher
-- A database (MySQL, PostgreSQL, H2, etc.)
+- Java 23+
+- Maven 3.9+
+- Node.js 22+
+- PostgreSQL 16+
+- Redis 7+
 
-### Installation
+### Option 1: Docker Compose (Recommended)
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd url-shortener-sb
+cp .env.example .env
+# Edit .env with your JWT secret and database credentials
+
+docker-compose up -d
 ```
 
-2. Configure your database in `src/main/resources/application.properties`
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:8080
+- **Health check**: http://localhost:8080/actuator/health
 
-3. Build the project:
+### Option 2: Local Development
+
+1. **Start PostgreSQL and Redis** (locally or via Docker):
+   ```bash
+   docker run -d --name postgres -p 5432:5432 -e POSTGRES_DB=urlshortener -e POSTGRES_PASSWORD=secret postgres:16
+   docker run -d --name redis -p 6379:6379 redis:7
+   ```
+
+2. **Run the backend**:
+   ```bash
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+   ```
+
+3. **Run the frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+### Running Tests
+
 ```bash
-mvn clean build
+# Unit and integration tests
+./mvnw test
+
+# Load tests (requires k6)
+cd load-test
+k6 run redirect-load-test.js
 ```
 
-4. Run the application:
-```bash
-mvn spring-boot:run
-```
+## API Overview
 
-The application will start on the default Spring Boot port (8080).
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/public/register` | No | Register a new user |
+| `POST` | `/api/auth/public/login` | No | Login, returns JWT |
+| `POST` | `/api/urls/shorten` | JWT | Shorten a URL (supports custom aliases) |
+| `GET` | `/api/urls/myurls` | JWT | List user's URLs (paginated) |
+| `PUT` | `/api/urls/{id}` | JWT | Update URL metadata |
+| `DELETE` | `/api/urls/{id}` | JWT | Delete a shortened URL |
+| `GET` | `/{shortCode}` | No | Redirect to original URL (302) |
+| `GET` | `/api/analytics/summary` | JWT | Dashboard summary |
+| `GET` | `/api/analytics/daily` | JWT | Daily click aggregation |
+| `GET` | `/api/analytics/top` | JWT | Most-clicked links |
+| `GET` | `/actuator/health` | No | Health check |
 
 ## Database Schema
 
-### Users Table
-- `id`: Long (Primary Key)
-- `email`: String
-- `username`: String
-- `password`: String
-- `role`: String (default: ROLE_USER)
+```mermaid
+erDiagram
+    users {
+        bigint id PK
+        varchar username UK
+        varchar email UK
+        varchar password
+        varchar role
+    }
 
-### URL Mappings Table
-- `id`: Long (Primary Key)
-- `original_url`: String
-- `short_url`: String
-- `click_count`: Integer (default: 0)
-- `created_date`: LocalDateTime
-- `user_id`: Long (Foreign Key to Users)
+    url_mapping {
+        bigint id PK
+        varchar original_url
+        varchar short_url UK
+        int click_count
+        timestamp created_date
+        timestamp expires_at
+        bigint user_id FK
+    }
 
-### Click Events Table
-- `id`: Long (Primary Key)
-- `click_date`: LocalDateTime
-- `url_mapping_id`: Long (Foreign Key to UrlMappings)
+    click_event {
+        bigint id PK
+        timestamp click_date
+        varchar referrer
+        varchar user_agent
+        bigint url_mapping_id FK
+    }
 
-## Dependencies
+    users ||--o{ url_mapping : "owns"
+    url_mapping ||--o{ click_event : "tracks"
+```
 
-- `spring-boot-starter-web` - Web framework
-- `spring-boot-starter-data-jpa` - Database ORM
-- `lombok` - Annotation processor for reducing boilerplate
-- `spring-boot-starter-test` - Testing framework
+## Feature Roadmap
 
-## Future Enhancements
-
-- REST API endpoints for URL creation and retrieval
-- URL expiration policies
-- Custom short URL codes
-- Advanced analytics dashboard
-- URL categorization and tagging
-- Batch URL shortening
+- [x] URL shortening with random code generation
+- [x] JWT authentication and user management
+- [x] Basic click counting
+- [ ] Database unique constraint on short codes
+- [ ] Extracted short-code generation service
+- [ ] URL validation and normalization
+- [ ] Custom short aliases
+- [ ] URL expiration with 410 Gone
+- [ ] Delete and update endpoints
+- [ ] Paginated and sortable URL listings
+- [ ] Redis cache-aside pattern for redirects
+- [ ] Cache TTL and invalidation
+- [ ] Async click analytics (off critical path)
+- [ ] Batch analytics writes
+- [ ] Referrer and user-agent tracking
+- [ ] Analytics dashboard with charts
+- [ ] Rate limiting (per-user and per-IP)
+- [ ] Per-user shortening quotas
+- [ ] Centralized exception handling
+- [ ] Structured API error responses
+- [ ] Integration and unit test suite
+- [ ] Docker and Docker Compose
+- [ ] GitHub Actions CI/CD pipeline
+- [ ] Spring Boot Actuator health and metrics
+- [ ] Structured request logging
+- [ ] Load testing and performance benchmarks
 
 ## License
 
-This project is part of a portfolio/resume projects collection.
+Portfolio project — not intended for production deployment.
