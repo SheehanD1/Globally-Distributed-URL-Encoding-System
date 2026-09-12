@@ -17,7 +17,7 @@ public class RedirectController {
 
     @GetMapping("/{shortUrl:[a-zA-Z0-9]{8}}")
     public ResponseEntity<Void> redirect(@PathVariable String shortUrl) {
-        UrlMapping mapping = urlMappingService.getOriginalUrl(shortUrl);
+        UrlMapping mapping = urlMappingService.resolveAndTrackClick(shortUrl);
         if (mapping != null) {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Location", mapping.getOriginalUrl());
