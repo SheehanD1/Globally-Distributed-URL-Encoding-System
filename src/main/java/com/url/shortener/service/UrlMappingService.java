@@ -6,7 +6,7 @@ import com.url.shortener.models.UrlMapping;
 import com.url.shortener.models.User;
 import com.url.shortener.repository.ClickEventRepository;
 import com.url.shortener.repository.UrlMappingRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,12 +14,10 @@ import java.util.List;
 import java.util.Random;
 
 @Service
+@RequiredArgsConstructor
 public class UrlMappingService {
-    @Autowired
-    private UrlMappingRepository urlMappingRepository;
-
-    @Autowired
-    private ClickEventRepository clickEventRepository;
+    private final UrlMappingRepository urlMappingRepository;
+    private final ClickEventRepository clickEventRepository;
 
     public UrlMappingResponse createShortenedUrl(String originalUrl, User user) {
         String shortUrl = generateShortUrl();
