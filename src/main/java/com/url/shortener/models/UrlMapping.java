@@ -8,12 +8,21 @@ import java.util.List;
 
 @Entity
 @Data
+@Table(name = "url_mapping",
+        uniqueConstraints = {
+            @UniqueConstraint(columnNames = "short_url")
+        })
 public class UrlMapping {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 2048)
     private String originalUrl;
+
+    @Column(nullable = false, unique = true, length = 30)
     private String shortUrl;
+
     private int clickCount = 0;
     private LocalDateTime createdDate = LocalDateTime.now();
 
